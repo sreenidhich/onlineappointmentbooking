@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+{% load static %}
+    
+<head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0">
+        
+		
+		
+		<!-- Bootstrap CSS -->
+        <link rel="stylesheet" href="{% static 'admin/css/bootstrap.min.css' %}">
+	<!-- Datatables CSS -->
+		<link rel="stylesheet" href="{% static 'admin/plugins/datatables/datatables.min.css' %}">
+		<!-- Fontawesome CSS -->
+        <link rel="stylesheet" href="{% static 'admin/css/font-awesome.min.css' %}">
+		
+		<!-- Feathericon CSS -->
+        <link rel="stylesheet" href="{% static 'admin/css/feathericon.min.css' %}">
+		
+		<link rel="stylesheet" href="{% static 'admin/plugins/morris/morris.css' %}">
+		
+		<!-- Main CSS -->
+        <link rel="stylesheet" href="{% static 'admin/css/style.css' %}">
+		
+		<script src="https://cdn.jsdelivr.net/npm/chart.js@3.6.0/dist/chart.min.js"></script>
+		
+	
+		
+		
+    </head>
+    <body>
+	
+		
+        <div class="main-wrapper">
+            <div class="header">
+				<ul class="nav user-menu">
+					<li class="nav-item dropdown has-arrow">
+						<a href="#" class="dropdown-toggle nav-link" data-toggle="dropdown">	
+						</a>
+						<div class="dropdown-menu">
+							<div class="user-header">
+								
+								<div class="user-text">
+									<h6>Admin</h6>
+									
+								</div>
+							</div>
+							<a class="dropdown-item" href="{% url 'admin_profile' %}">My Profile</a>
+							<a class="dropdown-item" href="{% url 'logout' %}">Logout</a>
+						</div>
+					</li>
+					
+					
+				</ul>
+				<!-- /Header Right Menu -->
+				
+            </div>
+			<!-- /Header -->
+			
+			<!-- Sidebar -->
+            <div class="sidebar" id="sidebar">
+                <div class="sidebar-inner slimscroll">
+					<div id="sidebar-menu" class="sidebar-menu">
+						<ul>
+							<li class="menu-title"> 
+								<span>Main</span>
+							</li>
+							<li class="active"> 
+								<a href="{% url 'admin_dashboard' %}"><i class="fe fe-home"></i> <span>Dashboard</span></a>
+							</li>
+							<li>
+								<a href="{% url 'admin_view_appointment' %}"><i class="fe fe-layout"></i> <span>Doctor Appointments</span></a>
+							</li>
+							<li> 
+								<a href="{% url 'admin_view_doctors' %}"><i class="fe fe-user-plus"></i> <span>Doctors</span></a>
+							</li>
+							<li>
+								<a href="{% url 'admin_view_patients' %}"><i class="fe fe-user"></i> <span>Patients</span></a>
+							</li>
+						</ul>
+					</div>
+                </div>
+            </div>
+			<!-- /Sidebar -->
+			
+			<!-- Page Wrapper -->
+            <!-- /Page Wrapper -->
+			{% block body %}
+			{% endblock %}
+        </div>
+		<!-- /Main Wrapper -->
+		
+		<!-- jQuery -->
+        <script src="{% static 'admin/js/jquery-3.2.1.min.js' %}"></script>
+		
+		<!-- Bootstrap Core JS -->
+        <script src="{% static 'admin/js/popper.min.js' %}"></script>
+        <script src="{% static 'admin/js/bootstrap.min.js' %}"></script>
+		
+		<!-- Slimscroll JS -->
+        <script src="{% static 'admin/plugins/slimscroll/jquery.slimscroll.min.js' %}"></script>
+		<script src="{% static 'admin/plugins/raphael/raphael.min.js' %}"></script>
+		<script src="{% static 'admin/plugins/morris/morris.min.js' %}"></script>
+		<script src="{% static 'admin/js/chart.morris.js' %}"></script>
+		
+		<!-- Custom JS -->
+		<script  src="{% static 'admin/js/script.js' %}"></script>
+
+	<!-- Datatables JS -->
+	<script src="{% static 'admin/plugins/datatables/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'admin/plugins/datatables/datatables.min.js' %}"></script>
+		
+    </body>
+
+</html>

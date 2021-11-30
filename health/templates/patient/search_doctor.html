@@ -1,0 +1,52 @@
+{% extends 'patient/sidebar.html' %}
+{% load static %}
+{% block b %}
+<h2 style="font-family:roman;color:green" align="center" class="card">Search Doctor</h2>
+
+<div class="content">
+				<div class="container-fluid">
+					<div class="row">
+                        <div class="col-md-8 col-lg-8 col-xl-9">
+							{% for i in data %}
+							<!-- Doctor Widget -->
+							<div class="card">
+								<div class="card-body">
+									<div class="doctor-widget">
+										<div class="doc-info-left">
+											<div class="doc-info-cont">
+												<h4 class="doc-name">Dr. {{i.user.first_name}}</h4>
+												<p class="doc-speciality">{{i.specialist}}</p>
+												<div class="clinic-details">
+													<p class="doc-location"><i class="fas fa-user"></i> {{i.gender}}</p>
+													<p class="doc-location"><i class="fas fa-phone"></i> {{i.mobile}}</p>
+													
+												</div>
+												
+											</div>
+										</div>
+										<div class="doc-info-right">
+											<div class="clini-infos">
+												<ul>
+													<li><i class="fas fa-map-marker-alt"></i>{{i.address}}</li>
+													<li><i class="fas fa-briefcase"></i>{{i.experience}} Year</li>
+													<li><i class="far fa-calendar-check"></i>{{i.daystiming}}</li>
+													<li><i class="fas fa-clock"></i>{{i.timing}}</li>
+													<li><i class="fas fa-birthday-cake"></i>{{i.dob}}</li>
+													
+												</ul>
+											</div>
+											<div class="clinic-booking">
+												<a class="apt-btn" href="{% url 'appointment' i.id %}">Book Appointment</a>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+								{% endfor %}
+						</div>
+						</form>
+						</div>
+                    </div>
+                </div>
+			</div>
+{% endblock %}

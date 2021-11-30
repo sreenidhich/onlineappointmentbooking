@@ -1,0 +1,46 @@
+{% extends 'doctor/sidebar.html' %}
+{% load static %}
+{% block b %}
+<h2 style="font-family:roman;color:green" align="center" class="card">History of Appointments</h2>
+{% for i in messages %}
+<p style="color:red">{{i}}</p>
+{% endfor %}
+        <div class="card">
+            <div class="row">
+                    <div class="col-10">
+                        <p>
+                            <span style="margin-right:6%"></span>
+                            Patient Details
+                        </p>
+                    </div>
+                <div class="col-2">
+                            <span style="margin-left:30%">
+                                Status
+                            </span>
+
+                            </div>
+                        </div>
+                    </div>
+    {% for i in data %}
+        <div class="appointments">
+                <div class="appointment-list">
+                    <div class="profile-info-widget">
+                        <div class="profile-det-info">
+                            <h3><a href="#">{{i.patient.user.first_name}} {{i.patient.user.last_name}}</a></h3>
+                            <div class="patient-details">
+                                <h5><i class="far fa-clock"></i>{{i.a_date}}</h5>
+                                <h5><i class="fas fa-map-marker-alt"></i> {{i.patient.address}}</h5>
+                                <h5><i class="fas fa-envelope"></i> {{i.patient.user.email}}</h5>
+                                <h5 class="mb-0"><i class="fas fa-phone"></i> +91 {{i.patient.mobile}}</h5>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="appointment-action">
+                        <a href="{% url 'update_status' i.id %}" class="btn btn-sm bg-success-light">
+                            <i class="fas fa-check"></i>{{i.status}}
+                        </a>
+                    </div>
+                </div>
+            </div>
+{% endfor %}
+{% endblock %}
