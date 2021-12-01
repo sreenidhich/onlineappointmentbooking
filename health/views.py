@@ -194,11 +194,11 @@ def appointment(request,pid):
 
           app=Appointment.objects.create(doctor=doctor,patient=Patient.objects.get(user=request.user),a_date=a,status="pending",p_status="pending")
           template1 =render_to_string('patient/pemail_template.html',{'name':request.user.first_name,'doctor':doctor.user.first_name})
-          email="healthicde@gmail.com"
+          email="healthicdeserver@gmail.com"
           url="https://api.zoom.us/v2/users/{}/meetings".format(email)
           date=datetime.datetime(2022,7,5,13,30).strftime("%Y-%m-%d T%H:%M:%S")
           obj={"topic":"Test Booking","starttime":date,"duration":30,"password":"12345"}
-          mheader={"Authorization":"Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOm51bGwsImlzcyI6IjVRbVZWX2c4Um1xSmgySElOY0w4VEEiLCJleHAiOjE2Mzg5Nzc4NjYsImlhdCI6MTYzODM3MzA2N30.MGeDzRVSpzcAx9wwCSGszpfkx2dizht-MZP7EcK8uyE"}
+          mheader={"Authorization":"Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOm51bGwsImlzcyI6InFLYmdzY19PUWVxUS1NT2NjbzFTT0EiLCJleHAiOjE2Mzg5OTAxNzIsImlhdCI6MTYzODM4NTM3M30.KStEymqWlgUJFTFlWLEjO1TX0zNs_shZL0tdM2jLPMM"}
           create_meeting=requests.post(url,json=obj,headers=mheader)
           final=create_meeting.text
 
@@ -271,11 +271,11 @@ def confirmed_d_appointment(request):
     round_off_time=round(expiration_time.timestamp())
     headers= {"alg":"HS256","typ":"JWT"}
     template =render_to_string('doctor/email_template.html',{'name':request.user.first_name})
-    email="healthicde@gmail.com"
+    email="healthicdeserver@gmail.com"
     url="https://api.zoom.us/v2/users/{}/meetings".format(email)
     date=datetime.datetime(2022,7,5,13,30).strftime("%Y-%m-%d T%H:%M:%S")
     obj={"topic":"Test Booking","starttime":date,"duration":30,"password":"12345"}
-    mheader={"Authorization":"Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOm51bGwsImlzcyI6IjVRbVZWX2c4Um1xSmgySElOY0w4VEEiLCJleHAiOjE2Mzg2ODM3MDUsImlhdCI6MTYzODA3ODkwNn0.DLJ5wLRHtZwf_5vfeSxXc7S6xbg_BI1MoNj1Y3y7b70"}
+    mheader={"Authorization":"Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOm51bGwsImlzcyI6InFLYmdzY19PUWVxUS1NT2NjbzFTT0EiLCJleHAiOjE2Mzg5OTAxNzIsImlhdCI6MTYzODM4NTM3M30.KStEymqWlgUJFTFlWLEjO1TX0zNs_shZL0tdM2jLPMM"}
 
     create_meeting=requests.post(url,json=obj,headers=mheader)
     final=create_meeting.text
