@@ -15,6 +15,7 @@ from django.template.loader import render_to_string
 import datetime
 import json
 import http.client
+import requests
 from django.views.decorators.cache import cache_control
 # Create your views here.
 def access(user):
@@ -189,9 +190,19 @@ def appointment(request,pid):
         a = request.POST['a_date']
         app=Appointment.objects.create(doctor=doctor,patient=Patient.objects.get(user=request.user),a_date=a,status="pending",p_status="pending")
         template1 =render_to_string('patient/pemail_template.html',{'name':request.user.first_name,'doctor':doctor.user.first_name})
+        email="healthicde@gmail.com"
+        url="https://api.zoom.us/v2/users/{}/meetings".format(email)
+        date=datetime.datetime(2022,7,5,13,30).strftime("%Y-%m-%d T%H:%M:%S")
+        obj={"topic":"Test Booking","starttime":date,"duration":30,"password":"12345"}
+        mheader={"Authorization":"Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOm51bGwsImlzcyI6IjVRbVZWX2c4Um1xSmgySElOY0w4VEEiLCJleHAiOjE2Mzg2ODM3MDUsImlhdCI6MTYzODA3ODkwNn0.DLJ5wLRHtZwf_5vfeSxXc7S6xbg_BI1MoNj1Y3y7b70"}
+        create_meeting=requests.post(url,json=obj,headers=mheader)
+        final=create_meeting.text
+
+        data_dict = json.loads(final)
+        zoom_link= data_dict["start_url"]
         email = EmailMessage(
-        'hello',
-        template1,
+        'Appointment Confirmation',
+        ''+ template1+ 'Kindly be present for the appointment with your Health card and ID Proof. Your appointmet link is as follows: ' + zoom_link ,
         settings.EMAIL_HOST_USER,
         [request.user.email],
         )
@@ -252,9 +263,20 @@ def confirmed_d_appointment(request):
     round_off_time=round(expiration_time.timestamp())
     headers= {"alg":"HS256","typ":"JWT"}
     template =render_to_string('doctor/email_template.html',{'name':request.user.first_name})
+    email="healthicde@gmail.com"
+    url="https://api.zoom.us/v2/users/{}/meetings".format(email)
+    date=datetime.datetime(2022,7,5,13,30).strftime("%Y-%m-%d T%H:%M:%S")
+    obj={"topic":"Test Booking","starttime":date,"duration":30,"password":"12345"}
+    mheader={"Authorization":"Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOm51bGwsImlzcyI6IjVRbVZWX2c4Um1xSmgySElOY0w4VEEiLCJleHAiOjE2Mzg2ODM3MDUsImlhdCI6MTYzODA3ODkwNn0.DLJ5wLRHtZwf_5vfeSxXc7S6xbg_BI1MoNj1Y3y7b70"}
+
+    create_meeting=requests.post(url,json=obj,headers=mheader)
+    final=create_meeting.text
+
+    data_dict = json.loads(final)
+    zoom_link= data_dict["start_url"]
     email = EmailMessage(
-        'hello',
-        template,
+        'Appointment Confirmation',
+        '' + template + '' + zoom_link ,
         settings.EMAIL_HOST_USER,
         [request.user.email],
     )
