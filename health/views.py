@@ -214,7 +214,20 @@ def search_doctor(request):
     else:
          messages.info(request,'You are not logged in')
          return redirect('login')
-
+def doc_patient_dashboard(request,pid):
+    if not access(request.user):
+        messages.success(request,'Update Your Profile and Wait for Verification')
+        return redirect('doctor_profile')
+    data = Patient.objects.get(id=pid)
+    data2 = Doctor.objects.get(user=request.user)
+    pat = Appointment.objects.filter(patient = data)
+    pat2 = Appointment.objects.filter(patient = data,doctor=data2,a_date = datetime.date.today()).first()
+    if not pat2:
+        pat2 = 0
+    else:
+        pat2 = pat2.id
+    d = {'data': pat,'pat':data,'pat2':pat2}
+    return render(request,'doctor/doc_patient_dashboard.html',d)
 def appointment(request,pid):
     if request.user.is_authenticated:
         doctor=Doctor.objects.get(id=pid)
