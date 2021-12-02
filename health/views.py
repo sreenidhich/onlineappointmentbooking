@@ -95,14 +95,13 @@ def all_doctor_appointment(request):
     d = {'data':pat}
     return render(request,'patient/all_doctor_appointment.html',d)
 def doctor_dashboard(request):
-    if request.user.is_authenticated:
+    if request.user.is_authenticated: 
         tod = datetime.date.today()
-        yesterday = tod -datetime.timedelta(days=1)
         data = Appointment.objects.filter(doctor=Doctor.objects.get(user=request.user))
         pend = Appointment.objects.filter(doctor=Doctor.objects.get(user=request.user),status="pending")
         c = Appointment.objects.filter(doctor=Doctor.objects.get(user=request.user)).count()
-        up = Appointment.objects.filter(doctor=Doctor.objects.get(user=request.user), a_date__gte=tod).exclude(a_date=yesterday)
-        today = Appointment.objects.filter(doctor=Doctor.objects.get(user=request.user), a_date=yesterday)
+        up = Appointment.objects.filter(doctor=Doctor.objects.get(user=request.user), a_date__gte=tod).exclude(a_date=tod)
+        today = Appointment.objects.filter(doctor=Doctor.objects.get(user=request.user), a_date=tod)
         t_today = today.count()
         t_pending = pend.count()
         d = {'data': data, 'total': c, 'up': up, 'today': today,'t_today':t_today,'t_pending':t_pending}
