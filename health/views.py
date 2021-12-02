@@ -15,8 +15,8 @@ from django.template.loader import render_to_string
 import datetime
 import json
 import http.client
-import requests
 from django.views.decorators.cache import cache_control
+import requests
 # Create your views here.
 def access(user):
     try:
@@ -81,6 +81,7 @@ def Logout(request):
     logout(request)
     messages.info(request,'You have logged out successfully')
     return redirect('login')
+@cache_control(no_cache=True, must_revalidate=True)
 def patient_dashboard(request):
     if request.user.is_authenticated:
         pat = Appointment.objects.filter(patient=Patient.objects.get(user=request.user))
@@ -94,131 +95,165 @@ def all_doctor_appointment(request):
     d = {'data':pat}
     return render(request,'patient/all_doctor_appointment.html',d)
 def doctor_dashboard(request):
-    tod = datetime.date.today()
-    data = Appointment.objects.filter(doctor=Doctor.objects.get(user=request.user))
-    pend = Appointment.objects.filter(doctor=Doctor.objects.get(user=request.user),status="pending")
-    c = Appointment.objects.filter(doctor=Doctor.objects.get(user=request.user)).count()
-    up = Appointment.objects.filter(doctor=Doctor.objects.get(user=request.user), a_date__gte=tod).exclude(a_date=tod)
-    today = Appointment.objects.filter(doctor=Doctor.objects.get(user=request.user), a_date=tod)
-    t_today = today.count()
-    t_pending = pend.count()
-    d = {'data': data, 'total': c, 'up': up, 'today': today,'t_today':t_today,'t_pending':t_pending}
-    return render(request,'doctor/doctor_dashboard.html',d)
+    if request.user.is_authenticated:
+        tod = datetime.date.today()
+        yesterday = tod -datetime.timedelta(days=1)
+        data = Appointment.objects.filter(doctor=Doctor.objects.get(user=request.user))
+        pend = Appointment.objects.filter(doctor=Doctor.objects.get(user=request.user),status="pending")
+        c = Appointment.objects.filter(doctor=Doctor.objects.get(user=request.user)).count()
+        up = Appointment.objects.filter(doctor=Doctor.objects.get(user=request.user), a_date__gte=tod).exclude(a_date=yesterday)
+        today = Appointment.objects.filter(doctor=Doctor.objects.get(user=request.user), a_date=yesterday)
+        t_today = today.count()
+        t_pending = pend.count()
+        d = {'data': data, 'total': c, 'up': up, 'today': today,'t_today':t_today,'t_pending':t_pending}
+        return render(request,'doctor/doctor_dashboard.html',d)
+    else:
+        messages.info(request,'You are not logged in')
+        return redirect('login')
 def Patient_Profile(request):
-    user = User.objects.get(id=request.user.id)
-    pat = Patient.objects.get(user=user)
-    form = PatientForm(request.POST or None,instance=pat)
-    if request.method == "POST":
-        form = PatientForm(request.POST,request.FILES,instance=pat)
-        if form.is_valid():
-            form.save()
-            user.first_name = request.POST['first_name']
-            user.last_name = request.POST['last_name']
-            user.email = request.POST['email']
-            user.save()
-            messages.success(request,'Profile Updated Successfully')
-            return redirect("patient_profile")
-    d = {'form':form}
-    return render(request,'patient/profile.html',d)
+    if request.user.is_authenticated:
+        user = User.objects.get(id=request.user.id)
+        pat = Patient.objects.get(user=user)
+        form = PatientForm(request.POST or None,instance=pat)
+        if request.method == "POST":
+            form = PatientForm(request.POST,request.FILES,instance=pat)
+            if form.is_valid():
+                form.save()
+                user.first_name = request.POST['first_name']
+                user.last_name = request.POST['last_name']
+                user.email = request.POST['email']
+                user.save()
+                messages.success(request,'Profile Updated Successfully')
+                return redirect("patient_profile")
+        d = {'form':form}
+        return render(request,'patient/profile.html',d)
+    else:
+        messages.info(request,'You are not logged in')
+        return redirect('login')
+
 def Change_Password(request):
-    if request.method=="POST":
-        n = request.POST['pwd1']
-        c = request.POST['pwd2']
-        d = request.POST['pwd3']
-        if c == d:
-            u = User.objects.get(username__exact=request.user.username)
-            u.set_password(d)
-            u.save()
-            messages.success(request,'Password Changed Successfully')
-            return redirect("change_password")
-    return render(request,'patient/change_password.html')
+    if request.user.is_authenticated:
+        if request.method=="POST":
+            n = request.POST['pwd1']
+            c = request.POST['pwd2']
+            d = request.POST['pwd3']
+            if c == d:
+                u = User.objects.get(username__exact=request.user.username)
+                u.set_password(d)
+                u.save()
+                messages.success(request,'Password Changed Successfully')
+                return redirect("change_password")
+        return render(request,'patient/change_password.html')
+    else:
+        messages.info(request,'You are not logged in')
+        return redirect('login')
+    
 def Doctor_Profile(request):
-    user = User.objects.get(id=request.user.id)
-    pat = Doctor.objects.get(user=user)
-    form = DoctorForm(request.POST or None,instance=pat)
-    if request.method == "POST":
-        form = DoctorForm(request.POST or None,request.FILES or None, instance=pat)
-        if form.is_valid():
-            form.save()
-            user.first_name = request.POST['first_name']
-            user.last_name = request.POST['last_name']
-            user.email = request.POST['email']
-            user.save()
-            messages.success(request,'Profile Updated Successfully')
-            return redirect("doctor_profile")
-    d = {'doc':pat,'form':form}
-    return render(request,'doctor/profile.html',d)
+    if request.user.is_authenticated:
+        user = User.objects.get(id=request.user.id)
+        pat = Doctor.objects.get(user=user)
+        form = DoctorForm(request.POST or None,instance=pat)
+        if request.method == "POST":
+            form = DoctorForm(request.POST or None,request.FILES or None, instance=pat)
+            if form.is_valid():
+                form.save()
+                user.first_name = request.POST['first_name']
+                user.last_name = request.POST['last_name']
+                user.email = request.POST['email']
+                user.save()
+                messages.success(request,'Profile Updated Successfully')
+                return redirect("doctor_profile")
+        d = {'doc':pat,'form':form}
+        return render(request,'doctor/profile.html',d)
+    else:  
+        messages.info(request,'You are not logged in')
+        return redirect('login')
+
 def Doctor_Change_Password(request):
-    if request.method=="POST":
-        n = request.POST['pwd1']
-        c = request.POST['pwd2']
-        d = request.POST['pwd3']
-        if c == d:
-            u = User.objects.get(username__exact=request.user.username)
-            u.set_password(d)
-            u.save()
-            messages.success(request,'Password Changed Successfully')
-            return redirect("change_password")
-    return render(request,'doctor/change_password.html')
+    if request.user.is_authenticated:
+        if request.method=="POST":
+            n = request.POST['pwd1']
+            c = request.POST['pwd2']
+            d = request.POST['pwd3']
+            if c == d:
+                u = User.objects.get(username__exact=request.user.username)
+                u.set_password(d)
+                u.save()
+                messages.success(request,'Password Changed Successfully')
+                return redirect("change_password")
+        return render(request,'doctor/change_password.html')
+    else:  
+        messages.info(request,'You are not logged in')
+        return redirect('login')
+    
 def search_doctor(request):
-    data = Doctor.objects.all()
-    l = "All"
-    g = "All"
-    s = "All"
-    if request.method == "POST":
-        l = ""
-        s = ""
-        g = ""
-        try:
-            l = request.POST['location']
-        except:
-            pass
-        try:
-            g = request.POST['gender_type']
-        except:
-            pass
-        try:
-            s = request.POST['specialist']
-        except:
-            pass
-        data = Doctor.objects.filter(gender__icontains=g,specialist__icontains=s)
-    d={'data':data,'l':l,'g':g,'s':s}
-    return render(request,'patient/search_doctor.html',d)
+    if request.user.is_authenticated:
+        data = Doctor.objects.all()
+        l = "All"
+        g = "All"
+        s = "All"
+        if request.method == "POST":
+            l = ""
+            s = ""
+            g = ""
+            try:
+                l = request.POST['location']
+            except:
+                pass
+            try:
+                g = request.POST['gender_type']
+            except:
+                pass
+            try:
+                s = request.POST['specialist']
+            except:
+                pass
+            data = Doctor.objects.filter(gender__icontains=g,specialist__icontains=s)
+        d={'data':data,'l':l,'g':g,'s':s}
+        return render(request,'patient/search_doctor.html',d)
+    else:
+         messages.info(request,'You are not logged in')
+         return redirect('login')
+
 def appointment(request,pid):
-    doctor=Doctor.objects.get(id=pid)
-    if request.method == "POST":
-        a = request.POST['a_date']
-        tx=datetime.date.today()
-        x=str(tx)
-        if a>=x:
+    if request.user.is_authenticated:
+        doctor=Doctor.objects.get(id=pid)
+        if request.method == "POST":
+            a = request.POST['a_date']
+            tx=datetime.date.today()
+            x=str(tx)
+            if a>=x:
+                app=Appointment.objects.create(doctor=doctor,patient=Patient.objects.get(user=request.user),a_date=a,status="pending",p_status="pending")
+                template1 =render_to_string('patient/pemail_template.html',{'name':request.user.first_name,'doctor':doctor.user.first_name})
+                email="healthicdeserver@gmail.com"
+                url="https://api.zoom.us/v2/users/{}/meetings".format(email)
+                date=datetime.datetime(2022,7,5,13,30).strftime("%Y-%m-%d T%H:%M:%S")
+                obj={"topic":"Test Booking","starttime":date,"duration":30,"password":"12345"}
+                mheader={"Authorization":"Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOm51bGwsImlzcyI6InFLYmdzY19PUWVxUS1NT2NjbzFTT0EiLCJleHAiOjE2Mzg5OTAxNzIsImlhdCI6MTYzODM4NTM3M30.KStEymqWlgUJFTFlWLEjO1TX0zNs_shZL0tdM2jLPMM"}
+                create_meeting=requests.post(url,json=obj,headers=mheader)
+                final=create_meeting.text
 
-          app=Appointment.objects.create(doctor=doctor,patient=Patient.objects.get(user=request.user),a_date=a,status="pending",p_status="pending")
-          template1 =render_to_string('patient/pemail_template.html',{'name':request.user.first_name,'doctor':doctor.user.first_name})
-          email="healthicdeserver@gmail.com"
-          url="https://api.zoom.us/v2/users/{}/meetings".format(email)
-          date=datetime.datetime(2022,7,5,13,30).strftime("%Y-%m-%d T%H:%M:%S")
-          obj={"topic":"Test Booking","starttime":date,"duration":30,"password":"12345"}
-          mheader={"Authorization":"Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOm51bGwsImlzcyI6InFLYmdzY19PUWVxUS1NT2NjbzFTT0EiLCJleHAiOjE2Mzg5OTAxNzIsImlhdCI6MTYzODM4NTM3M30.KStEymqWlgUJFTFlWLEjO1TX0zNs_shZL0tdM2jLPMM"}
-          create_meeting=requests.post(url,json=obj,headers=mheader)
-          final=create_meeting.text
+                data_dict = json.loads(final)
+                zoom_link= data_dict["start_url"]
+                email = EmailMessage(
+                'Appointment Confirmation',
+                ''+ template1+ 'Kindly be present for the appointment with your Health card and ID Proof. Your appointmet link is as follows: ' + zoom_link ,
+                settings.EMAIL_HOST_USER,
+                [request.user.email],
+                )
+                email.fail_silently=False
+                email.send()
+                return redirect("requestAppointment",app.id)
+            else:
+                    d={'doctor':doctor}
+                    messages.success(request,'You can not book appointment for past days')
+                    return render(request,'patient/appointment.html',d)
+        d={'doctor':doctor}
+        return render(request,'patient/appointment.html',d)
+    else:
+         messages.info(request,'You are not logged in')
+         return redirect('login')
 
-          data_dict = json.loads(final)
-          zoom_link= data_dict["start_url"]
-          email = EmailMessage(
-          'Appointment Confirmation',
-          ''+ template1+ 'Kindly be present for the appointment with your Health card and ID Proof. Your appointmet link is as follows: ' + zoom_link ,
-          settings.EMAIL_HOST_USER,
-          [request.user.email],
-          )
-          email.fail_silently=False
-          email.send()
-          return redirect("requestAppointment",app.id)
-        else:
-            d={'doctor':doctor}
-            messages.success(request,'You can not book appointment for past days')
-            return render(request,'patient/appointment.html',d)
-    d={'doctor':doctor}
-    return render(request,'patient/appointment.html',d)
 def requestAppointment(request,pid):
     data=Appointment.objects.get(id=pid)
     if request.method=="POST":
@@ -228,6 +263,7 @@ def requestAppointment(request,pid):
     d={'data':data}
     return render(request,'patient/requestAppointment.html',d)
 def p_appointment(request):
+
     data=Appointment.objects.filter(patient=Patient.objects.get(user=request.user),status="pending")
     d={'data':data}
     return render(request,'patient/p_appoinment.html',d)
@@ -260,37 +296,41 @@ def confirmed_p_appointment(request):
     d={'data':data}
     return render(request,'patient/confirmed_p_appoinment.html',d)
 def confirmed_d_appointment(request):
-    if not access(request.user):
-        messages.success(request,'Update Your Profile and Wait for Verification')
-        return redirect('doctor_profile')
-    tod=datetime.date.today()
-    data=Appointment.objects.filter(doctor=Doctor.objects.get(user=request.user),status="confirmed",a_date__gte=tod)
-    d={'data':data}
-    time_now=datetime.datetime.now()
-    expiration_time=time_now+datetime.timedelta(seconds=36)
-    round_off_time=round(expiration_time.timestamp())
-    headers= {"alg":"HS256","typ":"JWT"}
-    template =render_to_string('doctor/email_template.html',{'name':request.user.first_name})
-    email="healthicdeserver@gmail.com"
-    url="https://api.zoom.us/v2/users/{}/meetings".format(email)
-    date=datetime.datetime(2022,7,5,13,30).strftime("%Y-%m-%d T%H:%M:%S")
-    obj={"topic":"Test Booking","starttime":date,"duration":30,"password":"12345"}
-    mheader={"Authorization":"Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOm51bGwsImlzcyI6InFLYmdzY19PUWVxUS1NT2NjbzFTT0EiLCJleHAiOjE2Mzg5OTAxNzIsImlhdCI6MTYzODM4NTM3M30.KStEymqWlgUJFTFlWLEjO1TX0zNs_shZL0tdM2jLPMM"}
+    if request.user.is_authenticated:
+        if not access(request.user):
+            messages.success(request,'Update Your Profile and Wait for Verification')
+            return redirect('doctor_profile')
+        tod=datetime.date.today()
+        data=Appointment.objects.filter(doctor=Doctor.objects.get(user=request.user),status="confirmed",a_date__gte=tod)
+        d={'data':data}
+        time_now=datetime.datetime.now()
+        expiration_time=time_now+datetime.timedelta(seconds=36)
+        round_off_time=round(expiration_time.timestamp())
+        headers= {"alg":"HS256","typ":"JWT"}
+        template =render_to_string('doctor/email_template.html',{'name':request.user.first_name})
+        email="healthicdeserver@gmail.com"
+        url="https://api.zoom.us/v2/users/{}/meetings".format(email)
+        date=datetime.datetime(2022,7,5,13,30).strftime("%Y-%m-%d T%H:%M:%S")
+        obj={"topic":"Test Booking","starttime":date,"duration":30,"password":"12345"}
+        mheader={"Authorization":"Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOm51bGwsImlzcyI6InFLYmdzY19PUWVxUS1NT2NjbzFTT0EiLCJleHAiOjE2Mzg5OTAxNzIsImlhdCI6MTYzODM4NTM3M30.KStEymqWlgUJFTFlWLEjO1TX0zNs_shZL0tdM2jLPMM"}
 
-    create_meeting=requests.post(url,json=obj,headers=mheader)
-    final=create_meeting.text
+        create_meeting=requests.post(url,json=obj,headers=mheader)
+        final=create_meeting.text
 
-    data_dict = json.loads(final)
-    zoom_link= data_dict["start_url"]
-    email = EmailMessage(
-        'Appointment Confirmation',
-        '' + template + '' + zoom_link ,
-        settings.EMAIL_HOST_USER,
-        [request.user.email],
-    )
-    email.fail_silently=False
-    email.send()
-    return render(request,'doctor/confirmed_d_appoinment.html',d)
+        data_dict = json.loads(final)
+        zoom_link= data_dict["start_url"]
+        email = EmailMessage(
+            'Appointment Confirmation',
+            '' + template + '' + zoom_link ,
+            settings.EMAIL_HOST_USER,
+            [request.user.email],
+        )
+        email.fail_silently=False
+        email.send()
+        return render(request,'doctor/confirmed_d_appoinment.html',d)
+    else:
+        messages.info(request,'You are not logged in')
+        return redirect('login')
 def history_p_appointment(request):
     tod=datetime.date.today()
     data=Appointment.objects.filter(patient=Patient.objects.get(user=request.user),a_date__lte=tod)
@@ -304,6 +344,7 @@ def history_d_appointment(request):
     data=Appointment.objects.filter(doctor=Doctor.objects.get(user=request.user),a_date__lte=tod)
     d={'data':data}
     return render(request,'doctor/history_d_appoinment.html',d)
+@cache_control(no_cache=True, must_revalidate=True)
 def Login_Admin(request):
     error = False
     if request.method == 'POST':
@@ -317,25 +358,45 @@ def Login_Admin(request):
             error = True
     d = {'error': error}
     return render(request, 'login.html', d)
+
 def admin_dashboard(request):
-    t_doc = Doctor.objects.all().count()
-    t_pat = Patient.objects.all().count()
-    t_app2 = Appointment.objects.all().count()
-    d = {'t_doc':t_doc,'t_pat':t_pat,'t_app2':t_app2}
-    return render(request,'admin/admin_dashboard.html',d)
+    if request.user.is_authenticated:
+        t_doc = Doctor.objects.all().count()
+        t_pat = Patient.objects.all().count()
+        t_app2 = Appointment.objects.all().count()
+        d= {'t_doc':t_doc,'t_pat':t_pat,'t_app2':t_app2}
+        return render(request,'admin/admin_dashboard.html',d)
+    else:
+         messages.info(request,'You are not logged in')
+         return redirect('login')
 def admin_view_appointment(request):
-    data=Appointment.objects.all()
-    d={'data':data}
-    return render(request,'admin/admin_view_appointment.html',d)
+    if request.user.is_authenticated:
+        data=Appointment.objects.all()
+        d={'data':data}
+        return render(request,'admin/admin_view_appointment.html',d)
+    else:
+         messages.info(request,'You are not logged in')
+         return redirect('login')
+    
 def admin_view_doctors(request):
-    data=Doctor.objects.all()
-    d={'data':data}
-    return render(request,'admin/admin_view_doctors.html',d)
+    if request.user.is_authenticated:
+        data=Doctor.objects.all()
+        d={'data':data}
+        return render(request,'admin/admin_view_doctors.html',d)
+    else:
+         messages.info(request,'You are not logged in')
+         return redirect('login')
 def admin_view_patients(request):
-    data=Patient.objects.all()
-    d={'data':data}
-    return render(request,'admin/admin_view_patients.html',d)
+    if request.user.is_authenticated:
+        data=Patient.objects.all()
+        d={'data':data}
+        return render(request,'admin/admin_view_patients.html',d)
+    else:
+         messages.info(request,'You are not logged in')
+         return redirect('login')
+    
 def cancel_appointment(request,pid):
+    
     pat = Appointment.objects.get(id=pid)
     pat.delete()
     messages.success(request,'Appointment Cancelled Successfully')
@@ -418,20 +479,6 @@ def my_patient(request):
     data = Appointment.objects.filter(doctor=Doctor.objects.get(user=request.user),status="confirmed")
     d = {'data':data}
     return render(request,'doctor/my_patient.html',d)
-def doc_patient_dashboard(request,pid):
-    if not access(request.user):
-        messages.success(request,'Update Your Profile and Wait for Verification')
-        return redirect('doctor_profile')
-    data = Patient.objects.get(id=pid)
-    data2 = Doctor.objects.get(user=request.user)
-    pat = Appointment.objects.filter(patient = data)
-    pat2 = Appointment.objects.filter(patient = data,doctor=data2,a_date = datetime.date.today()).first()
-    if not pat2:
-        pat2 = 0
-    else:
-        pat2 = pat2.id
-    d = {'data': pat,'pat':data,'pat2':pat2}
-    return render(request,'doctor/doc_patient_dashboard.html',d)
 def delete_patient(request,pid):
     data = Patient.objects.get(id=pid)
     data.delete()
